@@ -8,47 +8,46 @@ import java.io.IOException;
 import java.net.*;
 import java.util.Random;
 
- /* You can add/change/delete class attributes if you think it would be
-  * appropriate.
-  *
-  * You can also add helper methods and change the implementation of those
-  * provided if you think it would be appropriate, as long as you DO NOT
-  * CHANGE the interface.
-  */
-
 public class Sensor implements ISensor {
     private float measurement;
 
     private final static int max_measure = 50;
     private final static int min_measure = 10;
 
-    private DatagramSocket s;
+    private final DatagramSocket socket;
     private byte[] buffer;
 
     /* Note: Could you discuss in one line of comment what you think can be
      * an appropriate size for buffsize?
      * (Which is used to init DatagramPacket?)
+     * The buffer size should be set to the maximum size of the message that we want to send.
+     * After seeing the average message size, we can set the buffer size to a value that is
+     * slightly larger than the average message size, which was found to be 20.
      */
-    private static final int buffsize = 2048;
+    private static final int buffsize = 32;
 
-    public Sensor(String address, int port, int totMsg) {
+    private String address;
+    private int port;
+    private int totMsg;
+
+    public Sensor(String address, int port, int totMsg) throws SocketException {
         /* TODO: Build Sensor Object */
+        socket = new DatagramSocket();
+        this.address = address;
+        this.port = port;
+        this.totMsg = totMsg;
     }
 
     @Override
-    public void run (int N) throws InterruptedException {
-        /* TODO: Send N measurements */
-
-        /* Hint: You can get ONE measurement by calling
-         *
-         * float measurement = this.getMeasurement();
-         */
-
-         /* TODO: Call sendMessage() to send the msg to destination */
-
+    public void run (int N) {
+        for(int i = 0; i < N; i++) {
+            float measurement = this.getMeasurement();
+            MessageInfo msg = new MessageInfo(N, i + 1, measurement);
+            sendMessage(address, port, msg);
+        }
     }
 
-    public static void main (String[] args) {
+    public static void main (String[] args) throws SocketException {
         if (args.length < 3) {
             System.out.println("Usage: ./sensor.sh field_unit_address port number_of_measures");
             return;
@@ -59,29 +58,39 @@ public class Sensor implements ISensor {
         int port = Integer.parseInt(args[1]);
         int totMsg = Integer.parseInt(args[2]);
 
-        /* TODO: Call constructor of sensor to build Sensor object*/
+        Sensor sensor = new Sensor(address, port, totMsg);
 
-        /* TODO: Use Run to send the messages */
+        sensor.run(sensor.totMsg);
 
+        sensor.socket.close();
     }
 
     @Override
     public void sendMessage (String address, int port, MessageInfo msg) {
-        String toSend = msg.toString();
+        buffer = msg.toString().getBytes();
 
-        /* TODO: Build destination address object */
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getByName(address);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException("[Sensor] Unable to find the field unit address.", e);
+        }
 
-        /* TODO: Build datagram packet to send */
+        System.out.println("[Sensor] Sending message " + msg.getMessageNum() + " out of " + msg.getTotalMessages()
+                + ". Measure = " + msg.getMessage());
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, inetAddress, port);
 
-        /* TODO: Send packet */
-
+        try {
+            socket.send(packet);
+        } catch (IOException e) {
+            throw new RuntimeException("[Sensor] Unable to send packet.", e);
+        }
     }
 
     @Override
     public float getMeasurement () {
         Random r = new Random();
         measurement = r.nextFloat() * (max_measure - min_measure) + min_measure;
-
         return measurement;
     }
 }

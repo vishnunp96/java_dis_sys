@@ -10,64 +10,81 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
- /* You can add/change/delete class attributes if you think it would be
-  * appropriate.
-  *
-  * You can also add helper methods and change the implementation of those
-  * provided if you think it would be appropriate, as long as you DO NOT
-  * CHANGE the provided interface.
-  */
-
-/* TODO extend appropriate classes and implement the appropriate interfaces */
 public class CentralServer implements ICentralServer {
+
+    private final List<MessageInfo> receivedMessages;
+    private final List<Boolean> received;
 
     protected CentralServer () throws RemoteException {
         super();
 
-        /* TODO: Initialise Array receivedMessages */
+        receivedMessages = new ArrayList<>();
+        received = new ArrayList<>();
+    }
+
+    private void initialise(int totalMessages) {
+        receivedMessages.clear();
+        received.clear();
+        received.addAll(Collections.nCopies(totalMessages, Boolean.FALSE));
     }
 
     public static void main (String[] args) throws RemoteException {
         CentralServer cs = new CentralServer();
+        ICentralServer csStub = (ICentralServer) UnicastRemoteObject.exportObject(
+                (ICentralServer)cs, 0);
 
-        /* TODO: Configure Security Manager (If JAVA version earlier than version 17) */
+        int port = 1099;
+        if(args.length == 1){
+            port = Integer.parseInt(args[0]);
+        }
+        Registry registry = LocateRegistry.createRegistry(port);
 
-        /* TODO: Create (or Locate) Registry */
+        registry.rebind("CentralServer", csStub);
 
-        /* TODO: Bind to Registry */
-
-        System.out.println("Central Server is running...");
-
-
+        System.out.println("Central Server ready");
     }
 
+    private void printMissingMessages(int totalMessages) {
+        List<Integer> missingMessages = new ArrayList<>();
+        for(int i = 0; i < totalMessages; i++) {
+            if(!received.get(i)) {
+                missingMessages.add(i + 1);
+            }
+        }
+        System.out.println("Missing messages: " + missingMessages);
+    }
 
     @Override
     public void receiveMsg (MessageInfo msg) {
         System.out.println("[Central Server] Received message " + (msg.getMessageNum()) + " out of " +
                 msg.getTotalMessages() + ". Measure = " + msg.getMessage());
 
+        if(msg.getMessageNum() == 1) {
+            initialise(msg.getTotalMessages());
+        }
 
-        /* TODO: If this is the first message, reset counter and initialise data structure. */
+        receivedMessages.add(msg);
+        received.set(msg.getMessageNum() - 1, Boolean.TRUE);
 
-
-        /* TODO: Save current message */
-
-        /* TODO: If done with receiveing prints stats. */
-
-
+        if(msg.getMessageNum() == msg.getTotalMessages()) {
+            printStats();
+        }
     }
 
     public void printStats() {
-      /* TODO: Find out how many messages were missing */
+        int totalMessages = receivedMessages.getFirst().getTotalMessages();
+        int missing = Collections.frequency(received, Boolean.FALSE);
+        System.out.println("Total missing messages: " + missing + " out of " + totalMessages);
 
-      /* TODO: Print stats (i.e. how many message missing?
-       * do we know their sequence number? etc.) */
+        if(missing > 0) {
+            printMissingMessages(totalMessages);
+        }
 
-      /* TODO: Now re-initialise data structures for next time */
-
+        initialise(0);
+        System.out.println();
     }
 
 }
