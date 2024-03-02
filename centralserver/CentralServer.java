@@ -75,7 +75,7 @@ public class CentralServer implements ICentralServer {
 
         if(msg.getMessageNum() == msg.getTotalMessages()) {
             printStats();
-            timeOutTask.cancel();
+            timer.cancel();
         }
     }
 
