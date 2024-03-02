@@ -1,7 +1,5 @@
 package sensor;
-/*
- * Updated on Feb 2023
- */
+
 import common.MessageInfo;
 
 import java.io.IOException;
@@ -33,7 +31,6 @@ public class Sensor implements ISensor {
     private long startTime;
 
     public Sensor(String address, int port, int totMsg) throws SocketException {
-        /* TODO: Build Sensor Object */
         socket = new DatagramSocket();
         this.address = address;
         this.port = port;
@@ -56,7 +53,6 @@ public class Sensor implements ISensor {
             return;
         }
 
-        /* Parse input arguments */
         String address = args[0];
         int port = Integer.parseInt(args[1]);
         int totMsg = Integer.parseInt(args[2]);

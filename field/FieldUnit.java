@@ -1,7 +1,5 @@
 package field;
-/*
- * Updated on Feb 2023
- */
+
 import centralserver.ICentralServer;
 import common.MessageInfo;
 
@@ -87,7 +85,6 @@ public class FieldUnit implements IFieldUnit {
 
         while (listen) {
             DatagramPacket packet = new DatagramPacket(new byte[buffsize], buffsize);
-//            System.out.println("[Field Unit] Waiting for message...");
             try{
                 socket.receive(packet);
             } catch (IOException e) {
