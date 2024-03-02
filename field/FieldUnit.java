@@ -170,8 +170,6 @@ public class FieldUnit implements IFieldUnit {
     public void sendAverages () {
         System.out.println("[Field Unit] Sending SMAs to RMI");
         for(MessageInfo msg : receivedMessages) {
-            if(msg.getMessageNum() > 5)
-                break;
             msg.setMessage(smaValues.get(msg.getMessageNum() - 1));
             for(int attempt = 0; attempt < sendAttempts; attempt++){
                 try {
