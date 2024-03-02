@@ -169,8 +169,9 @@ public class FieldUnit implements IFieldUnit {
     @Override
     public void sendAverages () {
         System.out.println("[Field Unit] Sending SMAs to RMI");
-        for(MessageInfo msg : receivedMessages) {
-            msg.setMessage(smaValues.get(msg.getMessageNum() - 1));
+        for(int i = 0; i < receivedMessages.size(); i++) {
+            MessageInfo msg = new MessageInfo(receivedMessages.size(),
+                    i+1, smaValues.get(i));
             for(int attempt = 0; attempt < sendAttempts; attempt++){
                 try {
                     central_server.receiveMsg(msg);

@@ -22,6 +22,8 @@ public class CentralServer implements ICentralServer {
 
     private TimerTask timeOutTask;
 
+    private long transmissionStartTime;
+
     protected CentralServer () throws RemoteException {
         super();
 
@@ -58,16 +60,17 @@ public class CentralServer implements ICentralServer {
         System.out.println("[Central Server] Received message " + (msg.getMessageNum()) + " out of " +
                 msg.getTotalMessages() + ". Measure = " + msg.getMessage());
 
-        if(msg.getMessageNum() == 1) {
+        if(receivedMessages.isEmpty()) {
             initialise(msg.getTotalMessages());
             initialiseTimeout();
             timer.schedule(timeOutTask, timeout);
+            transmissionStartTime = System.currentTimeMillis();
         }
 
         receivedMessages.add(msg);
         received.set(msg.getMessageNum() - 1, Boolean.TRUE);
 
-        if(msg.getMessageNum() == msg.getTotalMessages()) {
+        if(receivedMessages.size() == msg.getTotalMessages()) {
             printStats();
             timeOutTask.cancel();
         }
@@ -76,6 +79,8 @@ public class CentralServer implements ICentralServer {
     public void printStats() {
         int totalMessages = receivedMessages.get(0).getTotalMessages();
         int missing = Collections.frequency(received, Boolean.FALSE);
+        System.out.println("Transmission time: " +
+                (System.currentTimeMillis() - transmissionStartTime) + "ms");
         System.out.println("Total missing messages: " + missing + " out of " + totalMessages);
 
         if(missing > 0) {

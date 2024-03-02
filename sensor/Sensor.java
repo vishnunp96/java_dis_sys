@@ -30,12 +30,15 @@ public class Sensor implements ISensor {
     private int port;
     private int totMsg;
 
+    private long startTime;
+
     public Sensor(String address, int port, int totMsg) throws SocketException {
         /* TODO: Build Sensor Object */
         socket = new DatagramSocket();
         this.address = address;
         this.port = port;
         this.totMsg = totMsg;
+        this.startTime = System.currentTimeMillis();
     }
 
     @Override
@@ -63,6 +66,8 @@ public class Sensor implements ISensor {
         sensor.run(sensor.totMsg);
 
         sensor.socket.close();
+        System.out.println("[Sensor] All messages sent. Time taken: " +
+                (System.currentTimeMillis() - sensor.startTime) + "ms.");
     }
 
     @Override
