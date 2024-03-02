@@ -10,7 +10,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -18,7 +17,6 @@ import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 public class FieldUnit implements IFieldUnit {
@@ -26,6 +24,8 @@ public class FieldUnit implements IFieldUnit {
     private final List<MessageInfo> receivedMessages;
     private final List<Float> smaValues;
     private final int sendAttempts;
+
+    private int retriesElapsed;
     private DatagramSocket socket;
 
     /* Note: Could you discuss in one line of comment what do you think can be
@@ -45,6 +45,7 @@ public class FieldUnit implements IFieldUnit {
         smaValues = new ArrayList<>();
         sendAttempts = 3;
         timeout = 50000;
+        retriesElapsed = 0;
     }
 
     @Override
@@ -111,6 +112,7 @@ public class FieldUnit implements IFieldUnit {
             }
             if(msg.getMessageNum() == 1) {
                 receivedMessages.clear();
+                retriesElapsed = 0;
             }
             addMessage(msg);
 
@@ -174,6 +176,7 @@ public class FieldUnit implements IFieldUnit {
                     central_server.receiveMsg(msg);
                     break;
                 } catch (RemoteException e) {
+                    retriesElapsed += 1;
                     if(attempt == sendAttempts - 1) {
                         throw new RuntimeException("[Field Unit] Could not send message to RMI", e);
                     }
@@ -182,6 +185,10 @@ public class FieldUnit implements IFieldUnit {
         }
         receivedMessages.clear();
         smaValues.clear();
+        if(retriesElapsed > 0){
+            System.out.println("[Field Unit] Retries elapsed: " + retriesElapsed);
+        }
+        retriesElapsed = 0;
         System.out.println();
     }
 
