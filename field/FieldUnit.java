@@ -187,7 +187,7 @@ public class FieldUnit implements IFieldUnit {
 
     @Override
     public void printStats () {
-        int totalMessages = receivedMessages.getFirst().getTotalMessages();
+        int totalMessages = receivedMessages.get(0).getTotalMessages();
         List<Boolean> received = new ArrayList<>(Collections.nCopies(totalMessages, Boolean.FALSE));
         for(MessageInfo msg : receivedMessages) {
             received.set(msg.getMessageNum() - 1, Boolean.TRUE);

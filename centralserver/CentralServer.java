@@ -75,7 +75,7 @@ public class CentralServer implements ICentralServer {
     }
 
     public void printStats() {
-        int totalMessages = receivedMessages.getFirst().getTotalMessages();
+        int totalMessages = receivedMessages.get(0).getTotalMessages();
         int missing = Collections.frequency(received, Boolean.FALSE);
         System.out.println("Total missing messages: " + missing + " out of " + totalMessages);
 
