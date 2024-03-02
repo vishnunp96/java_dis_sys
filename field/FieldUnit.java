@@ -44,7 +44,7 @@ public class FieldUnit implements IFieldUnit {
         receivedMessages = new ArrayList<>();
         smaValues = new ArrayList<>();
         sendAttempts = 3;
-        timeout = 50000;
+        timeout = 30000;
         retriesElapsed = 0;
     }
 

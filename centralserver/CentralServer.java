@@ -9,20 +9,33 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class CentralServer implements ICentralServer {
 
     private final List<MessageInfo> receivedMessages;
     private final List<Boolean> received;
 
+    private final int timeout;
+
+    private final Timer timer;
+
+    private final TimerTask timeOutTask;
+
     protected CentralServer () throws RemoteException {
         super();
 
         receivedMessages = new ArrayList<>();
         received = new ArrayList<>();
+        timeout = 30000;
+        timer = new Timer();
+        timeOutTask = new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("[Central Server] Timeout reached. Resetting received messages.");
+                printStats();
+            }
+        };
     }
 
     private void initialise(int totalMessages) {
@@ -47,16 +60,6 @@ public class CentralServer implements ICentralServer {
         System.out.println("Central Server ready");
     }
 
-    private void printMissingMessages(int totalMessages) {
-        List<Integer> missingMessages = new ArrayList<>();
-        for(int i = 0; i < totalMessages; i++) {
-            if(!received.get(i)) {
-                missingMessages.add(i + 1);
-            }
-        }
-        System.out.println("Missing messages: " + missingMessages);
-    }
-
     @Override
     public void receiveMsg (MessageInfo msg) {
         System.out.println("[Central Server] Received message " + (msg.getMessageNum()) + " out of " +
@@ -64,6 +67,7 @@ public class CentralServer implements ICentralServer {
 
         if(msg.getMessageNum() == 1) {
             initialise(msg.getTotalMessages());
+            timer.schedule(timeOutTask, timeout);
         }
 
         receivedMessages.add(msg);
@@ -71,6 +75,7 @@ public class CentralServer implements ICentralServer {
 
         if(msg.getMessageNum() == msg.getTotalMessages()) {
             printStats();
+            timeOutTask.cancel();
         }
     }
 
@@ -85,6 +90,19 @@ public class CentralServer implements ICentralServer {
 
         initialise(0);
         System.out.println();
+    }
+
+    private void printMissingMessages(int totalMessages) {
+        List<Integer> missingMessages = new ArrayList<>();
+        for(int i = 0; i < totalMessages; i++) {
+            if(!received.get(i)) {
+                missingMessages.add(i + 1);
+            }
+        }
+        System.out.println("Missing messages: " + missingMessages);
+    }
+
+    private void scheduleTimeout() {
     }
 
 }
